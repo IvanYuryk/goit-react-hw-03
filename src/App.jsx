@@ -1,70 +1,50 @@
 import { useState, useEffect } from "react";
 import "./App.css";
-import Description from "./components/Description/Description";
-import Feedback from "./components/Feedback/Feedback";
-import Options from "./components/Options/Options";
-import Notification from "./components/Notification/Notification";
+import contactsData from "./contacts.json";
+import ContactForm from "./components/ContactForm/ContactForm";
+import ContactList from "./components/ContactList/ContactList";
+import SearchBox from "./components/SearchBox/SearchBox";
 
-const App = () => {
-  const initialState = {
-    good: 0,
-    neutral: 0,
-    bad: 0,
+function App() {
+  const [contacts, setContacts] = useState(() => {
+    const strignifiedContacts = localStorage.getItem("contacts");
+    if (!strignifiedContacts) return [contactsData];
+
+    const parsedContacts = JSON.parse(strignifiedContacts);
+    return parsedContacts;
+  });
+  const [searchTerm, setSearchTerm] = useState("");
+
+  useEffect(() => {
+    localStorage.setItem("contacts", JSON.stringify(contacts));
+  }, [contacts]);
+
+  const handleSearchChange = (event) => {
+    setSearchTerm(event.target.value);
   };
 
-  const [feedbackCounts, setFeedbackCounts] = useState(initialState);
+  const filteredContacts = contacts.filter((contact) =>
+    contact.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-  const [positivePercentage, setPositivePercentage] = useState(0);
-
-  useEffect(() => {
-    const savedCounts = JSON.parse(localStorage.getItem("feedbackCounts"));
-    if (savedCounts) {
-      setFeedbackCounts(savedCounts);
-    }
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem("feedbackCounts", JSON.stringify(feedbackCounts));
-    const totalOptions =
-      feedbackCounts.good + feedbackCounts.neutral + feedbackCounts.bad;
-    const percentage = Math.round(
-      ((feedbackCounts.good + feedbackCounts.neutral) / totalOptions) * 100
+  const deleteContact = (id) => {
+    setContacts((prevContacts) =>
+      prevContacts.filter((contact) => contact.id !== id)
     );
-    setPositivePercentage(isNaN(percentage) ? 0 : percentage);
-  }, [feedbackCounts]);
-
-  const updateOptions = (feedbackType) => {
-    setFeedbackCounts((prevCounts) => ({
-      ...prevCounts,
-      [feedbackType]: prevCounts[feedbackType] + 1,
-    }));
   };
 
-  const resetOptions = () => {
-    setFeedbackCounts(initialState);
+  const addContact = (newContact) => {
+    setContacts((prevContacts) => [...prevContacts, newContact]);
   };
-
-  const totalOptions =
-    feedbackCounts.good + feedbackCounts.neutral + feedbackCounts.bad;
 
   return (
     <div className="container">
-      <Description />
-      <Options
-        updateOptions={updateOptions}
-        totalOptions={totalOptions}
-        resetOptions={resetOptions}
-      />
-      {totalOptions > 0 ? (
-        <Feedback
-          feedbackCounts={feedbackCounts}
-          positivePercentage={positivePercentage}
-        />
-      ) : (
-        <Notification message="No feedback yet." />
-      )}
+      <h1>Phonebook</h1>
+      <ContactForm onAddContact={addContact} />
+      <SearchBox searchTerm={searchTerm} onSearchChange={handleSearchChange} />
+      <ContactList contacts={filteredContacts} onDelete={deleteContact} />
     </div>
   );
-};
+}
 
 export default App;
