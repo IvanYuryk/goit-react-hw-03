@@ -13,6 +13,7 @@ function App() {
     const parsedContacts = JSON.parse(strignifiedContacts);
     return parsedContacts;
   });
+
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
@@ -24,7 +25,7 @@ function App() {
   };
 
   const filteredContacts = contacts.filter((contact) =>
-    contact.name.toLowerCase().includes(searchTerm.toLowerCase())
+    contact.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const deleteContact = (id) => {
